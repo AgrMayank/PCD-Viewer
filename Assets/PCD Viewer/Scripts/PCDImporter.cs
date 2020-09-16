@@ -41,7 +41,7 @@ public class PCDImporter : ScriptedImporter
     public void InstantiatePoints(string assetName, string dirName)
     {
         // Load Point gameobject
-        m_point = Resources.Load("Point") as GameObject;
+        m_point = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PCD Viewer/Prefabs/Point.prefab");
 
         // Create Point Cloud gamemobject
         m_pointCloud = new GameObject(assetName);
