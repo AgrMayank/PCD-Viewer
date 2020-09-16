@@ -7,7 +7,6 @@ using System.IO;
 using UnityEditor;
 using System.Text.RegularExpressions;
 
-
 [ScriptedImporter(1, "pcd")]
 public class PCDImporter : ScriptedImporter
 {
