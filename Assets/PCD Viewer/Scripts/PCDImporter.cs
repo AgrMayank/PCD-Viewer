@@ -71,6 +71,9 @@ public class PCDImporter : ScriptedImporter
 
         // Delete the converted .txt file 
         File.Delete(dirName + assetName + ".txt");
+
+        // Delete point cloud from scene
+        DestroyImmediate(m_pointCloud);
     }
 
     // Gets a single line from the file
