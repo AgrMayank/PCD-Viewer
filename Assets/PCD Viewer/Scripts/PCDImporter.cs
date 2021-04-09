@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
@@ -50,22 +51,28 @@ public class PCDImporter : ScriptedImporter
 
         // Get file name
         string fileName = dirName + assetName + ".txt";
-        // Debug.Log(fileName);
 
         // Get total number of points in the file
         string points = GetLine(fileName, 10);
         points = Regex.Replace(points, "[^0-9]+", string.Empty);
         int totalPoints = Convert.ToInt32(points);
-        // Debug.Log(totalPoints);
 
+        // Add Mesh Renderer and Mesh Filter
+        MeshRenderer meshRenderer = m_pointCloud.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/PCD Viewer/Materials/Point Mat.mat");
+
+        MeshFilter meshFilter = m_pointCloud.AddComponent<MeshFilter>();
+
+        // Instantiate points
         for (int i = 12; i < totalPoints; i++)
         {
             Vector3 xyz = GetXYZValue(fileName, i);
 
             var newPoint = Instantiate(m_point, xyz, Quaternion.identity);
             newPoint.transform.parent = m_pointCloud.transform;
-            // Debug.Log("Instantiated " + i);
         }
+
+        CombineAllMesh();
 
         // Save created point cloud file as a prefab
         PrefabUtility.SaveAsPrefabAsset(m_pointCloud, dirName + assetName + ".prefab");
@@ -75,7 +82,27 @@ public class PCDImporter : ScriptedImporter
         File.Delete(dirName + assetName + ".txt");
 
         // Delete point cloud from scene
-        DestroyImmediate(m_pointCloud);
+        // DestroyImmediate(m_pointCloud);
+    }
+
+    public void CombineAllMesh()
+    {
+        MeshFilter[] meshFilters = m_pointCloud.GetComponentsInChildren<MeshFilter>();
+        CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+
+        int i = 1;
+        while (i < meshFilters.Length)
+        {
+            combine[i].mesh = meshFilters[i].sharedMesh;
+            combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+            DestroyImmediate(meshFilters[i].gameObject);
+
+            i++;
+        }
+
+        m_pointCloud.transform.GetComponent<MeshFilter>().mesh = new Mesh();
+        m_pointCloud.transform.GetComponent<MeshFilter>().sharedMesh.CombineMeshes(combine);
+        m_pointCloud.transform.gameObject.SetActive(true);
     }
 
     // Gets a single line from the file
@@ -103,7 +130,6 @@ public class PCDImporter : ScriptedImporter
         float z_val = float.Parse(strlist[2]);
 
         Vector3 xyz = new Vector3(x_val, y_val, z_val);
-        // Debug.Log(xyz.ToString("F5"));
 
         return xyz;
     }

@@ -6,7 +6,7 @@ Shader "Point Cloud/Point"
     Properties
     {
         _Tint("Tint", Color) = (0.5, 0.5, 0.5, 1)
-        _PointSize("Point Size", Float) = 0.05
+        _PointSize("Point Size", Float) = 1
         [Toggle] _Distance("Apply Distance", Float) = 1
     }
     SubShader
