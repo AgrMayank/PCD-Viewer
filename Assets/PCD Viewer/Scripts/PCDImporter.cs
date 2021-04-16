@@ -10,8 +10,6 @@ using UnityEngine;
 [ScriptedImporter(1, "pcd")]
 public class PCDImporter : ScriptedImporter
 {
-    private GameObject m_point;
-
     private GameObject m_pointCloud;
 
     // Send asset path to CreatePCD() function
@@ -40,9 +38,6 @@ public class PCDImporter : ScriptedImporter
     // Instantiates points under Point Cloud gameobject by getting the Vector3 values line by line
     public void InstantiatePoints(string assetName, string dirName)
     {
-        // Load Point gameobject
-        m_point = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PCD Viewer/Prefabs/Point.prefab");
-
         // Create Point Cloud gamemobject
         m_pointCloud = new GameObject(assetName);
 
@@ -50,9 +45,16 @@ public class PCDImporter : ScriptedImporter
         string fileName = dirName + assetName + ".txt";
 
         // Get total number of points in the file
-        string points = GetLine(fileName, 10);
+        string[] lines = System.IO.File.ReadAllLines(fileName);
+        string points = lines[9];
+
         points = Regex.Replace(points, "[^0-9]+", string.Empty);
         int totalPoints = Convert.ToInt32(points);
+
+        if (totalPoints > lines.Length)
+        {
+            totalPoints = lines.Length - 1;
+        }
 
         // Add Mesh, Mesh Renderer & Mesh Filter
         MeshRenderer meshRenderer = m_pointCloud.AddComponent<MeshRenderer>();
@@ -61,6 +63,7 @@ public class PCDImporter : ScriptedImporter
         MeshFilter meshFilter = m_pointCloud.AddComponent<MeshFilter>();
 
         Mesh mesh = new Mesh();
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         meshFilter.mesh = mesh;
 
         Vector3[] pointsList = new Vector3[totalPoints - 12];
@@ -69,7 +72,7 @@ public class PCDImporter : ScriptedImporter
         // Instantiate points
         for (int i = 12; i < totalPoints; i++)
         {
-            pointsList[i - 12] = GetXYZValue(fileName, i);
+            pointsList[i - 12] = GetXYZValue(lines[i - 1]);
 
             indices[i - 12] = i - 12;
         }
@@ -86,22 +89,9 @@ public class PCDImporter : ScriptedImporter
         File.Delete(dirName + assetName + ".txt");
     }
 
-    // Gets a single line from the file
-    public string GetLine(string fileName, int line)
-    {
-        using (var sr = new StreamReader(fileName))
-        {
-            for (int i = 1; i < line; i++)
-                sr.ReadLine();
-            return sr.ReadLine();
-        }
-    }
-
     // Returns Vector3 coordinates of a given line
-    public Vector3 GetXYZValue(string fileName, int line)
+    public Vector3 GetXYZValue(string data)
     {
-        string data = GetLine(fileName, line);
-
         char[] seperators = { ',', ' ' };
 
         String[] strlist = data.Split(seperators, StringSplitOptions.None);
