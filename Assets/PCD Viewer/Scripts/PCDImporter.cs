@@ -4,8 +4,13 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
+
+#if UNITY_2020_1_OR_NEWER
+using UnityEditor.AssetImporters;
+#else
+using UnityEditor.Experimental.AssetImporters;
+# endif
 
 [ScriptedImporter(1, "pcd")]
 public class PCDImporter : ScriptedImporter
